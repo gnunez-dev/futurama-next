@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { Button, Card, Grid, Row, Text } from '@nextui-org/react';
 import { NextPage, GetStaticPaths, GetStaticProps } from 'next';
-import { futuramaApi } from '../../api';
 import { Layout } from '../../components/layouts';
 import { FuturamaList } from '../../interfaces';
-import { localFavorites } from '../../utils';
+import { getCharacterInfo, localFavorites } from '../../utils';
 
 import confetti from 'canvas-confetti';
 
@@ -101,15 +100,15 @@ export default CharacterPage;
 export const getStaticPaths: GetStaticPaths = async (ctx) => {
   //const { data } = await  // your fetch function here 
 
-  const character15 = [...Array(15)].map( (value, index) => (
+  const character10 = [...Array(10)].map( (value, index) => (
     { params: 
       { id: `${ index + 1 }` }
     })
   );
 
   return {
-    paths: character15,
-    fallback: false
+    paths: character10,
+    fallback: 'blocking'
   }
 }
 
@@ -120,8 +119,18 @@ export const getStaticPaths: GetStaticPaths = async (ctx) => {
 //- The page must be pre-rendered (for SEO) and be very fast — getStaticProps generates HTML and JSON files, both of which can be cached by a CDN for performance.
 
 export const getStaticProps: GetStaticProps = async ({params}) => {
+
   const { id } = params as {id: string};
-  const {data} = await futuramaApi.get<FuturamaList>(`/characters/${id}`);
+  const data = await getCharacterInfo(id);
+
+  if( !data ){
+      return {
+        redirect: {
+          destination: '/',
+          permanent: true
+        }
+      }
+    }
   return {
     props: {
       character: data
